@@ -127,6 +127,12 @@ def register():
 		oauth_token = f.write(oauth_token_secret)
 		f.close()
 
+def tweet(string):
+	url = "https://api.twitter.com/1.1/statuses/update.json"
+	request = post(url, {'status': string})
+	if request.status_code / 100 == 2:
+		print("Successfully tweeted!")
+
 if os.path.exists(path_token):
 	f = open(path_token, 'r')
 	oauth_token = f.read()
