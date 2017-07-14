@@ -83,9 +83,9 @@ def post(url, params):
 		'oauth_timestamp'        : oauth_timestamp,
 	}
 	oauth_signature =  build_signature('POST', url, oauth_params, params=params)
-	oauth_params['oauth_signature'] = percent_encode(str(oauth_signature))
+	oauth_params['oauth_signature'] = percent_encode(oauth_signature)
 	for key, val in params.items():
-		params[key] = str(val)#percent_encode(str(val))
+		params[key] = str(val)
 	request = requests.post(url, params, headers={'Authorization': build_oauth_header(oauth_params)})
 	return request
 
