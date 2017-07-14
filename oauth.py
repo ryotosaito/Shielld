@@ -42,7 +42,11 @@ def percent_encode(src):
 		if reserved.search(char):
 			dst += char
 		else:
-			dst += '%'+format(ord(char), 'x').upper()
+			for byte in list(char.encode('UTF-8')):
+				if reserved.search(chr(byte)):
+					dst += chr(byte)
+				else:
+					dst += '%'+hex(byte)[2:].upper()
 	return dst
 
 def gen_oauth_nonce():
