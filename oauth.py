@@ -13,8 +13,7 @@ import json
 import sys
 import copy
 
-oauth_consumer_key     = 'k0AGtDrE0ovNTiwjYExgLnyNr'
-oauth_consumer_secret  = '9ru0jWTE6Pta1aqla9BVrySPtlrindboTH0UGyioS8EdRDuYq6'
+oauth_consumer_key     = 'AmPvijYirICwMaD773FHcdODu'
 oauth_callback         = 'oob'
 oauth_signature_method = 'HMAC-SHA1'
 oauth_version          = '1.0'
