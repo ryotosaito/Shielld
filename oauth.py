@@ -23,8 +23,10 @@ oauth_token = ''
 oauth_token_secret = ''
 
 confdir           = os.environ['HOME'] + '/.sheilld'
-path_token        = confdir + '/oauth_token'
-path_token_secret = confdir + '/oauth_token_secret'
+token_path = {
+	'oauth_token'        : confdir + '/oauth_token',
+	'oauth_token_secret' : confdir + '/oauth_token_secret'
+}
 
 def hmac_sha1(key, msg):
 	# Reference: https://gist.github.com/heskyji/5167567b64cb92a910a3
@@ -120,12 +122,10 @@ def register():
 		oauth_token_secret = data['oauth_token_secret'][0]
 		if not os.path.exists(confdir):
 			os.makedirs(confdir)
-		f = open(path_token, 'w+')
-		oauth_token = f.write(oauth_token)
-		f.close()
-		f = open(path_token_secret, 'w+')
-		oauth_token = f.write(oauth_token_secret)
-		f.close()
+		for varname, path in token_path.items():
+			f = open(path, 'w+')
+			exec('f.write('+varname+')')
+			f.close()
 
 def tweet(string):
 	url = "https://api.twitter.com/1.1/statuses/update.json"
@@ -133,15 +133,13 @@ def tweet(string):
 	if request.status_code / 100 == 2:
 		print("Successfully tweeted!")
 
-if os.path.exists(path_token):
-	f = open(path_token, 'r')
-	oauth_token = f.read()
-	f.close()
-if os.path.exists(path_token_secret):
-	f = open(path_token_secret, 'r')
-	oauth_token_secret = f.read()
-	f.close()
-
-if (oauth_token == '') | (oauth_token_secret == ''):
-	register()
-
+# At the beginning, look for access token.
+# If token files do not exist, register the token first.
+for varname, path in token_path.items():
+	if os.path.exists(path):
+		f = open(path, 'r')
+		exec(varname+' = f.read()')
+		f.close()
+	if eval(varname) == '':
+		register()
+		break
