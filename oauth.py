@@ -13,6 +13,9 @@ import json
 import sys
 import copy
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 oauth_consumer_key     = 'AmPvijYirICwMaD773FHcdODu'
 oauth_callback         = 'oob'
 oauth_signature_method = 'HMAC-SHA1'
@@ -66,8 +69,10 @@ def build_signature(method, url, oauth_params, params={}):
 		encoded_params += key+'='+percent_encode(str(all_params[key]))+'&'
 	encoded_params = encoded_params[:-1]
 	base_string = method.upper()+'&'+percent_encode(url)+'&'+percent_encode(encoded_params)
-	signing_key = oauth_consumer_secret+'&'+oauth_token_secret
-	return hmac_sha1(signing_key, base_string)
+	calc_url = 'https://www.ryotosaito.com/sheilld/calc_signature.php'
+	params = {'base_string' : base_string, 'oauth_token_secret' : oauth_token_secret}
+	request = requests.post(calc_url, params, verify=False);
+	return request.text
 
 def build_oauth_header(params):
 	header = 'OAuth '
