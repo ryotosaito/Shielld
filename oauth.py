@@ -21,13 +21,15 @@ oauth_callback         = 'oob'
 oauth_signature_method = 'HMAC-SHA1'
 oauth_version          = '1.0'
 
-oauth_token = ''
-oauth_token_secret = ''
+user_name = ''
+users     = {}
 
-confdir           = os.environ['HOME'] + '/.sheilld'
-token_path = {
-	'oauth_token'        : confdir + '/oauth_token',
-	'oauth_token_secret' : confdir + '/oauth_token_secret'
+conf_dir   = os.environ['HOME'] + '/.sheilld'
+users_dir  = conf_dir + '/users'
+conf_files = {
+	'oauth_token',
+	'oauth_token_secret',
+	'user_id'
 }
 
 def hmac_sha1(key, msg):
@@ -70,6 +72,7 @@ def build_signature(method, url, oauth_params, params={}):
 	encoded_params = encoded_params[:-1]
 	base_string = method.upper()+'&'+percent_encode(url)+'&'+percent_encode(encoded_params)
 	calc_url = 'https://www.ryotosaito.com/sheilld/calc_signature.php'
+	oauth_token_secret = users[user_name]['oauth_token_secret'] if user_name in users else ''
 	params = {'base_string' : base_string, 'oauth_token_secret' : oauth_token_secret}
 	request = requests.post(calc_url, params, verify=False);
 	return request.text
@@ -85,7 +88,7 @@ def post(url, params):
 	oauth_nonce     = gen_oauth_nonce()
 	oauth_timestamp = gen_oauth_timestamp()
 	oauth_params = {
-		'oauth_token'            : oauth_token,
+		'oauth_token'            : users[user_name]['oauth_token'] if user_name != '' else oauth_token,
 		'oauth_consumer_key'     : oauth_consumer_key,
 		'oauth_signature_method' : oauth_signature_method,
 		'oauth_version'          : oauth_version,
@@ -100,7 +103,8 @@ def post(url, params):
 	return request
 
 def register():
-	global oauth_token, oauth_token_secret
+	global oauth_token, user_name
+	user_name = ''
 	request_token_url = 'https://api.twitter.com/oauth/request_token'
 	oauth_nonce     = gen_oauth_nonce()
 	oauth_timestamp = gen_oauth_timestamp()
@@ -126,13 +130,13 @@ def register():
 		access_token_url = 'https://api.twitter.com/oauth/access_token'
 		request = post(access_token_url, {'oauth_verifier' : pin})
 		data = urllib.parse.parse_qs(request.text)
-		oauth_token        = data['oauth_token'][0]
-		oauth_token_secret = data['oauth_token_secret'][0]
-		if not os.path.exists(confdir):
-			os.makedirs(confdir)
-		for varname, path in token_path.items():
+		user_dir = users_dir + '/' + data['screen_name'][0]
+		if not os.path.exists(user_dir):
+			os.makedirs(user_dir)
+		for varname in conf_files:
+			path = user_dir + '/' + varname
 			f = open(path, 'w+')
-			exec('f.write('+varname+')')
+			exec('f.write(data["'+varname+'"][0])')
 			f.close()
 
 def tweet(string):
@@ -141,13 +145,37 @@ def tweet(string):
 	if request.status_code / 100 == 2:
 		print("Successfully tweeted!")
 
+def change_user():
+	global user_name
+	user_name = ''
+	while not user_name in users:
+		user_name = input('User name ' + str(list(users.keys())) + ' : ')
+
 # At the beginning, look for access token.
 # If token files do not exist, register the token first.
-for varname, path in token_path.items():
-	if os.path.exists(path):
-		f = open(path, 'r')
-		exec(varname+' = f.read()')
-		f.close()
-	if eval(varname) == '':
-		register()
-		break
+if not os.path.exists(users_dir):
+	register()
+	sys.exit()
+
+for user_dir in [x[0] for x in os.walk(users_dir)][1:]:
+	screen_name = os.path.basename(user_dir)
+	users[screen_name] = {}
+	for varname in conf_files:
+		path = user_dir + '/' + varname
+		if os.path.exists(path):
+			f = open(path, 'r')
+			read = f.read();
+			if read == '':
+				users.pop(screen_name)
+				register()
+				sys.exit()
+			exec('users["'+ screen_name + '"]["' + varname + '"] = read')
+			f.close()
+		else:
+			register()
+			sys.exit()
+
+if len(users.keys()) == 1:
+	user_name = list(users.keys())[0]
+else:
+	change_user()
