@@ -105,6 +105,9 @@ def get(url, params):
 def post(url, params):
 	return connect('post', url, params)
 
+def stream(url, params):
+	return connect('get', url, params, stream=True)
+
 def register():
 	global oauth_token, user_name
 	user_name = ''
