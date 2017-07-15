@@ -12,6 +12,7 @@ import requests
 import json
 import sys
 import copy
+import shutil
 
 oauth_consumer_key     = 'AmPvijYirICwMaD773FHcdODu'
 oauth_callback         = 'oob'
@@ -172,29 +173,32 @@ def change_user():
 
 # At the beginning, look for access token.
 # If token files do not exist, register the token first.
-if not os.path.exists(users_dir):
-	register()
-	sys.exit()
-
-for user_dir in [x[0] for x in os.walk(users_dir)][1:]:
-	screen_name = os.path.basename(user_dir)
-	users[screen_name] = {}
-	for varname in conf_files:
-		path = user_dir + '/' + varname
-		if os.path.exists(path):
-			f = open(path, 'r')
-			read = f.read();
-			if read == '':
+if os.path.exists(users_dir):
+	for user_dir in [x[0] for x in os.walk(users_dir)][1:]:
+		screen_name = os.path.basename(user_dir)
+		users[screen_name] = {}
+		for varname in conf_files:
+			path = user_dir + '/' + varname
+			if os.path.exists(path):
+				f = open(path, 'r')
+				read = f.read();
+				if read == '':
+					users.pop(screen_name)
+					register()
+					sys.exit()
+				exec('users["'+ screen_name + '"]["' + varname + '"] = read')
+				f.close()
+			else:
+				shutil.rmtree(user_dir)
 				users.pop(screen_name)
-				register()
-				sys.exit()
-			exec('users["'+ screen_name + '"]["' + varname + '"] = read')
-			f.close()
-		else:
-			register()
-			sys.exit()
+				print('Missing config file of @'+screen_name+'.')
+				print('Type `register()` to relogin.')
+				break
 
-if len(users.keys()) == 1:
+if len(users.keys()) == 0:
+	register()
+elif len(users.keys()) == 1:
 	user_name = list(users.keys())[0]
 else:
 	change_user()
+print('Logged in as @'+screen_name+'!')
