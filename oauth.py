@@ -80,7 +80,7 @@ def build_oauth_header(params):
 		header += key+'="'+str(val)+'", '
 	return header[:-2]
 
-def post(url, params):
+def connect(method, url, params, stream=False):
 	# Generate temporaly-used parameters
 	oauth_nonce     = gen_oauth_nonce()
 	oauth_timestamp = gen_oauth_timestamp()
@@ -92,12 +92,18 @@ def post(url, params):
 		'oauth_nonce'            : oauth_nonce,
 		'oauth_timestamp'        : oauth_timestamp,
 	}
-	oauth_signature =  build_signature('POST', url, oauth_params, params=params)
+	oauth_signature =  eval('build_signature("' + method.upper() + '", url, oauth_params, params=params)')
 	oauth_params['oauth_signature'] = percent_encode(oauth_signature)
 	for key, val in params.items():
 		params[key] = str(val)
-	request = requests.post(url, params, headers={'Authorization': build_oauth_header(oauth_params)})
+	request = eval('requests.' + method + '(url, params, stream=stream, headers={"Authorization": build_oauth_header(oauth_params)})')
 	return request
+
+def get(url, params):
+	return connect('get', url, params)
+
+def post(url, params):
+	return connect('post', url, params)
 
 def register():
 	global oauth_token, user_name
