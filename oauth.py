@@ -108,6 +108,19 @@ def post(url, params):
 def stream(url, params):
 	return connect('get', url, params, stream=True)
 
+def getstream():
+	url = 'https://userstream.twitter.com/1.1/user.json'
+	params = {'with' : 'followings'}
+	with stream(url, params) as r:
+		for line in r.iter_lines():
+		# filter out keep-alive new lines
+			if line:
+				decoded_line = line.decode('utf-8')
+				tweet_data = json.loads(decoded_line)
+				if not 'event' in tweet_data and not 'friends' in tweet_data:
+					print(tweet_data['user']['name']+'(@'+tweet_data['user']['screen_name']+')')
+					print(tweet_data['text'])
+
 def register():
 	global oauth_token, user_name
 	user_name = ''
