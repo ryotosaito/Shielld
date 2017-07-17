@@ -150,7 +150,8 @@ def register():
 		access_token_url = 'https://api.twitter.com/oauth/access_token'
 		request = post(access_token_url, {'oauth_verifier' : pin})
 		data = urllib.parse.parse_qs(request.text)
-		user_dir = users_dir + '/' + data['screen_name'][0]
+		user_name = data['screen_name'][0]
+		user_dir  = users_dir + '/' + user_name
 		if not os.path.exists(user_dir):
 			os.makedirs(user_dir)
 		for varname in conf_files:
@@ -175,23 +176,23 @@ def change_user():
 # If token files do not exist, register the token first.
 if os.path.exists(users_dir):
 	for user_dir in [x[0] for x in os.walk(users_dir)][1:]:
-		screen_name = os.path.basename(user_dir)
-		users[screen_name] = {}
+		user_name = os.path.basename(user_dir)
+		users[user_name] = {}
 		for varname in conf_files:
 			path = user_dir + '/' + varname
 			if os.path.exists(path):
 				f = open(path, 'r')
 				read = f.read();
 				if read == '':
-					users.pop(screen_name)
+					users.pop(user_name)
 					register()
 					sys.exit()
-				exec('users["'+ screen_name + '"]["' + varname + '"] = read')
+				exec('users["'+ user_name + '"]["' + varname + '"] = read')
 				f.close()
 			else:
 				shutil.rmtree(user_dir)
-				users.pop(screen_name)
-				print('Missing config file of @'+screen_name+'.')
+				users.pop(user_name)
+				print('Missing config file of @'+user_name+'.')
 				print('Type `register()` to relogin.')
 				break
 
@@ -201,4 +202,4 @@ elif len(users.keys()) == 1:
 	user_name = list(users.keys())[0]
 else:
 	change_user()
-print('Logged in as @'+screen_name+'!')
+print('Logged in as @'+user_name+'!')
