@@ -172,9 +172,11 @@ def change_user():
 	while not user_name in users:
 		user_name = input('User name ' + str(list(users.keys())) + ' : ')
 
-# At the beginning, look for access token.
-# If token files do not exist, register the token first.
-if os.path.exists(users_dir):
+def get_config():
+	# At the beginning, look for access token.
+	# If token files do not exist, register the token first.
+	if not os.path.exists(users_dir) or len(os.listdir(users_dir)) == 0:
+		register()
 	for user_dir in [x[0] for x in os.walk(users_dir)][1:]:
 		user_name = os.path.basename(user_dir)
 		users[user_name] = {}
@@ -196,7 +198,9 @@ if os.path.exists(users_dir):
 				print('Type `register()` to relogin.')
 				break
 
+get_config()
 if len(users.keys()) == 0:
+	# May not needed
 	register()
 elif len(users.keys()) == 1:
 	user_name = list(users.keys())[0]
