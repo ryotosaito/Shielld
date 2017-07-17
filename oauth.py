@@ -185,10 +185,6 @@ def get_config():
 			if os.path.exists(path):
 				f = open(path, 'r')
 				read = f.read();
-				if read == '':
-					users.pop(user_name)
-					register()
-					sys.exit()
 				exec('users["'+ user_name + '"]["' + varname + '"] = read')
 				f.close()
 			else:
