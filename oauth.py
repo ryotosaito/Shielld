@@ -100,13 +100,13 @@ def connect(method, url, params, stream=False):
 	request = eval('requests.' + method + '(url, params, stream=stream, headers={"Authorization": build_oauth_header(oauth_params)})')
 	return request
 
-def get(url, params):
+def get(url, params={}):
 	return connect('get', url, params)
 
-def post(url, params):
+def post(url, params={}):
 	return connect('post', url, params)
 
-def stream(url, params):
+def stream(url, params={}):
 	return connect('get', url, params, stream=True)
 
 def getstream():
