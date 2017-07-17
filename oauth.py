@@ -30,6 +30,8 @@ conf_files = {
 	'user_id'
 }
 
+mute_ids = []
+
 def hmac_sha1(key, msg):
 	# Reference: https://gist.github.com/heskyji/5167567b64cb92a910a3
 	digester = hmac.new(bytes(key, 'UTF-8'), bytes(msg, 'UTF-8'), hashlib.sha1)
@@ -118,7 +120,7 @@ def getstream():
 			if line:
 				decoded_line = line.decode('utf-8')
 				tweet_data = json.loads(decoded_line)
-				if not 'event' in tweet_data and not 'friends' in tweet_data:
+				if 'text' in tweet_data and tweet_data['user']['id'] not in mute_ids:
 					print(tweet_data['user']['name']+'(@'+tweet_data['user']['screen_name']+')')
 					print(tweet_data['text'])
 
@@ -165,6 +167,12 @@ def tweet(string):
 	request = post(url, {'status': string})
 	if request.status_code / 100 == 2:
 		print("Successfully tweeted!")
+
+def get_mutes():
+	global mute_ids
+	url = 'https://api.twitter.com/1.1/mutes/users/ids.json'
+	request = get(url);
+	mute_ids = json.loads(request.text)['ids']
 
 def change_user():
 	global user_name
