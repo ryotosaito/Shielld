@@ -69,7 +69,7 @@ def build_signature(method, url, oauth_params, params={}):
 		encoded_params += key+'='+percent_encode(str(all_params[key]))+'&'
 	encoded_params = encoded_params[:-1]
 	base_string = method.upper()+'&'+percent_encode(url)+'&'+percent_encode(encoded_params)
-	calc_url = 'https://www.ryotosaito.com/sheilld/calc_signature.php'
+	calc_url = 'https://www.ryotosaito.com/shielld/calc_signature.php'
 	oauth_token_secret = users[user_name]['oauth_token_secret'] if user_name in users else ''
 	params = {'base_string' : base_string, 'oauth_token_secret' : oauth_token_secret}
 	request = requests.post(calc_url, params);
