@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+OAuth Package for Shielld
+"""
+
 import os
 import base64
 import re
@@ -33,19 +37,28 @@ conf_files = {
 mute_ids = []
 
 def hmac_sha1(key, msg):
-	# Reference: https://gist.github.com/heskyji/5167567b64cb92a910a3
+	'''
+	Calculate HMAC-SHA1 to create signature
+	Reference: https://gist.github.com/heskyji/5167567b64cb92a910a3
+	'''
 	digester = hmac.new(bytes(key, 'UTF-8'), bytes(msg, 'UTF-8'), hashlib.sha1)
 	sign1 = digester.digest()
 	sign2 = base64.b64encode(sign1)
 	return str(sign2, 'UTF-8')
 
 def percent_encode(src):
+	"""
+	URL encoding based on RFC3986
+	https://tools.ietf.org/html/rfc3986#section-2.1
+	"""
 	dst = ''
 	reserved = re.compile('[A-Za-z0-9-._~]')
 	for char in src:
 		if reserved.search(char):
 			dst += char
 		else:
+			# Percent encode needed chars
+			# Convert each byte to hex
 			for byte in list(char.encode('UTF-8')):
 				if reserved.search(chr(byte)):
 					dst += chr(byte)
@@ -54,23 +67,41 @@ def percent_encode(src):
 	return dst
 
 def gen_oauth_nonce():
+	"""
+	Generate oauth nonce for Twiter API
+	- Get random 32 bytes data
+	- Base64 encode
+	- Pick only word characters
+	"""
 	random  = os.urandom(32)
 	encoded = base64.b64encode(random)
 	words   = re.sub('[^\w]', '', str(encoded))
 	return words
 
 def gen_oauth_timestamp():
+	"""
+	Get current timestamp as integer
+	"""
 	return int(time.time())
 
 def build_signature(method, url, oauth_params, params={}):
+	"""
+	Create OAuth signature for Twitter API
+	crypt base : ${method}&${url}&${sorted_params}
+	crypt key  : ${consumer_secret}&${oauth_token_secret}
+	"""
+	# Copy params to prevent modification from original params
 	all_params = copy.deepcopy(oauth_params)
+	# Combine OAuth parameters and original parameters
 	all_params.update(params)
+	# Sort, stringify, and encode all parameters
 	keys = sorted(all_params.keys())
 	encoded_params = ''
 	for key in keys:
 		encoded_params += key+'='+percent_encode(str(all_params[key]))+'&'
 	encoded_params = encoded_params[:-1]
 	base_string = method.upper()+'&'+percent_encode(url)+'&'+percent_encode(encoded_params)
+	# Request crypt calculation to the server and return caluculated value
 	calc_url = 'https://www.ryotosaito.com/shielld/calc_signature.php'
 	oauth_token_secret = users[user_name]['oauth_token_secret'] if user_name in users else ''
 	params = {'base_string' : base_string, 'oauth_token_secret' : oauth_token_secret}
@@ -78,12 +109,19 @@ def build_signature(method, url, oauth_params, params={}):
 	return request.text
 
 def build_oauth_header(params):
+	"""
+	Create OAuth header
+	Authorization: OAuth key=val, key=val, ...
+	"""
 	header = 'OAuth '
 	for key, val in params.items():
 		header += key+'="'+str(val)+'", '
 	return header[:-2]
 
 def connect(method, url, params, stream=False):
+	"""
+	Request server with specified arguments
+	"""
 	# Generate temporaly-used parameters
 	oauth_nonce     = gen_oauth_nonce()
 	oauth_timestamp = gen_oauth_timestamp()
@@ -116,7 +154,6 @@ def getstream():
 	params = {'with' : 'followings'}
 	with stream(url, params) as r:
 		for line in r.iter_lines():
-		# filter out keep-alive new lines
 			if line:
 				decoded_line = line.decode('utf-8')
 				tweet_data = json.loads(decoded_line)
@@ -125,6 +162,9 @@ def getstream():
 					print(tweet_data['text'])
 
 def register():
+	"""
+	Login via Twitter API
+	"""
 	global oauth_token, user_name
 	user_name = ''
 	request_token_url = 'https://api.twitter.com/oauth/request_token'
@@ -181,6 +221,9 @@ def change_user():
 		user_name = input('User name ' + str(list(users.keys())) + ' : ')
 
 def get_config():
+	"""
+	Find configuration directory and get each values
+	"""
 	# At the beginning, look for access token.
 	# If token files do not exist, register the token first.
 	if not os.path.exists(users_dir) or len(os.listdir(users_dir)) == 0:
