@@ -199,7 +199,7 @@ def register():
 		for varname in conf_files:
 			path = user_dir + '/' + varname
 			f = open(path, 'w+')
-			exec('f.write(data["'+varname+'"][0])')
+			f.write(data[varname][0])
 			f.close()
 
 def tweet(string):
@@ -236,7 +236,7 @@ def get_config():
 			if os.path.exists(path):
 				f = open(path, 'r')
 				read = f.read();
-				exec('users["'+ user_name + '"]["' + varname + '"] = read')
+				users[user_name][varname] = read
 				f.close()
 			else:
 				shutil.rmtree(user_dir)
