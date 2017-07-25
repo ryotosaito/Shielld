@@ -26,7 +26,7 @@ oauth_version          = '1.0'
 user_name = ''
 users     = {}
 
-conf_dir   = os.environ['HOME'] + '/.sheilld'
+conf_dir   = os.environ['HOME'] + '/.shielld'
 users_dir  = conf_dir + '/users'
 conf_files = {
 	'oauth_token',
